@@ -59,6 +59,8 @@ The Node structure is defined as follows:
 
 My graph illustrates the valiant journey of our hero, Link, as he ventures through the treacherous Hylian Wood in search of the legendary Master Sword. Along the way, he must navigate a perilous path filled with lurking monsters and fearsome dragons. Time is of the essence, as the fate of Princess Zelda depends on his swift and courageous quest.
 
+Note: the grid probably looks warped here, as the formatting in GitHub is different than in VS Code!
+
 🧝 ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ ⬜ 
 ⬜ 🌳 🌳 🌳 🌳 🌳 ⬜ ⬜ ⬜ ⬜ ⬜ 🌳 🌳 🌳 ⬜ 
 ⬜ 🌳 🌳 🌳 🌳 🌳 ⬜ ⬜ ⬜ ⬜ ⬜ 🌳 🌳 🌳 ⬜ 
