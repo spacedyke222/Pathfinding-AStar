@@ -1,0 +1,243 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <cmath> 
+#include <algorithm>
+
+using namespace std;
+
+// Define the structure that will represent each cell in the grid;
+struct Node {
+    int x;         // Row index
+    int y;         // Column index
+    bool walkable; // True if the node can be traversed
+    float gCost;   // Cost from the start node
+    float hCost;   // Heuristic cost to the goal node
+    float fCost;   // Total cost (gCost + hCost)
+    Node* parent;  // Pointer to the parent node for path reconstruction
+
+    Node(int x, int y, bool walkable)
+        : x(x), y(y), walkable(walkable), gCost(INFINITY), hCost(0), fCost(INFINITY), parent(nullptr) {}
+
+    // Nodes are compared based on fCost;
+    bool operator<(const Node* other) const {
+        if (fCost == other->fCost) {
+            return hCost < other->hCost;  // Prioritize lower hCost when fCost is equal
+        }
+        return fCost > other->fCost;
+    }
+};
+
+// Manhattan distance heuristic - used to estimate of the cost from the current node to the goal node
+float calculateHeuristic(const Node& a, const Node& b) {
+    return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
+
+// Function to display the grid with start and end nodes
+void createAndDisplayGrid(const vector<vector<Node>>& grid, const Node& start, const Node& goal, const Node& enemy1, const Node& enemy2) {
+    for (int i = 0; i < grid.size(); ++i) {
+        for (int j = 0; j < grid[i].size(); ++j) {
+            if (i == start.x && j == start.y) {
+                cout << "🧝 "; // Start node
+            } else if (i == goal.x && j == goal.y) {
+                cout << "🗡️ "; // Goal node
+            } 
+            else if ( i == enemy1.x && j == enemy1.y){
+                cout << "🧌  "; // Enemy node
+            }
+            else if ( i == enemy2.x && j == enemy2.y){
+                cout << "🐉 "; // Enemy node
+            }else {
+                cout << (grid[i][j].walkable ? "⬜ " : "🌳 "); // Walkable: '.', Blocked: '#'
+            }
+        }
+        cout << endl;
+    }
+}
+
+// A* algorithm to find the path
+vector<Node> aStarAlgorithm(vector<vector<Node>>& grid, Node& start, Node& goal) {
+    priority_queue<Node*> openList;                       // Create a priority queue;
+    vector<vector<bool>> closedList(grid.size(), vector<bool>(grid[0].size(), false));
+
+    // Initialize start node
+    Node* start_point = &start;  // Initialize start_point to point to start;
+
+    start.gCost = 0;  // Cost is 0 because it's start
+    start.hCost = calculateHeuristic(start, goal);  // Use Manhattan heuristic to calculate cost
+    start.fCost = start.gCost + start.hCost;  // Total cost
+
+    // push the pointer to the open list
+    openList.push(start_point);                              // Add heuristic to priority queue
+
+    while (!openList.empty()) {
+
+        // Print elements of the open list for debugging
+        priority_queue<Node*> tempQueue = openList; // Create a temporary queue to access the elements
+        cout << "OpenList contents: ";
+        while (!tempQueue.empty()) {
+            Node* n = tempQueue.top();
+            cout << "(" << n->x << ", " << n->y << ", fCost: " << n->fCost << ") ";
+            tempQueue.pop();
+        }
+        cout << endl;
+
+        Node* current = openList.top();          // Cursor pointing to first element;
+        openList.pop();                          // Remove node from open list
+
+        // If the goal is reached, reconstruct the path
+        if (current->x == goal.x && current->y == goal.y) {
+            vector<Node> path;
+            while (current != nullptr) {
+                path.push_back(*current);
+                current = current->parent;
+            }
+            reverse(path.begin(), path.end());
+            return path;  // Return the reconstructed path
+        }
+
+        closedList[current->x][current->y] = true;
+
+        // Check neighbors (4 directions: up, down, left, right, diagonal)
+        vector<pair<int, int>> directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}}; // Includes diagonals!
+        for (auto& dir : directions) {
+            int newX = current->x + dir.first;
+            int newY = current->y + dir.second;
+
+            if (newX >= 0 && newX < grid.size() && newY >= 0 && newY < grid[0].size() &&
+                grid[newX][newY].walkable && !closedList[newX][newY]) {
+
+                Node& neighbor = grid[newX][newY];
+                float tentativeGCost = current->gCost + 1;
+
+                if (tentativeGCost < neighbor.gCost) {
+                    neighbor.gCost = tentativeGCost;
+                    neighbor.hCost = calculateHeuristic(neighbor, goal);
+                    neighbor.fCost = neighbor.gCost + neighbor.hCost;
+                    neighbor.parent = current;
+                    openList.push(&neighbor);
+                }           
+            }
+        }
+    }
+
+    return {}; // return an empty path if no path was found;
+}
+
+
+int main() {
+    int rows = 15; // Number of rows in the grid
+    int cols = 15; // Number of columns in the grid
+
+    // creates our grid;
+    vector<vector<Node>> grid(rows, vector<Node>(cols, Node(0, 0, true)));
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            grid[i][j] = Node(i, j, true);
+        }
+    }
+
+    // First blockade
+    grid[2][2].walkable = false;
+    grid[2][1].walkable = false;
+    grid[2][3].walkable = false;
+    grid[2][4].walkable = false;
+    grid[2][5].walkable = false;
+    grid[1][2].walkable = false;
+    grid[1][1].walkable = false;
+    grid[1][3].walkable = false;
+    grid[1][4].walkable = false;
+    grid[1][5].walkable = false;
+    grid[3][4].walkable = false;
+    grid[3][5].walkable = false;
+    grid[4][4].walkable = false;
+    grid[4][5].walkable = false;
+    grid[5][4].walkable = false;
+    grid[5][5].walkable = false;
+
+    // Second blockade
+    grid[7][6].walkable = false;
+    grid[8][6].walkable = false;
+    grid[7][7].walkable = false;
+    grid[7][8].walkable = false;
+    grid[8][7].walkable = false;
+    grid[8][8].walkable = false;
+    grid[6][8].walkable = false;
+    grid[6][9].walkable = false;
+    grid[5][8].walkable = false;
+    grid[5][9].walkable = false;
+    grid[7][9].walkable = false;
+    grid[8][9].walkable = false;
+    grid[7][5].walkable = false;
+    grid[7][4].walkable = false;
+    grid[8][5].walkable = false;
+    grid[8][4].walkable = false;
+
+    // Third Blockade
+    grid[9][0].walkable = false;
+    grid[10][0].walkable = false;
+    grid[9][1].walkable = false;
+    grid[10][1].walkable = false;
+    grid[9][2].walkable = false;
+    grid[10][2].walkable = false;
+
+    // Fourth Blockade
+    grid[11][4].walkable = false;
+    grid[11][5].walkable = false;
+    grid[11][6].walkable = false;
+    grid[11][7].walkable = false;
+    grid[11][8].walkable = false;
+    grid[11][9].walkable = false;
+    grid[11][10].walkable = false;
+    grid[11][11].walkable = false;
+    grid[11][12].walkable = false;
+    grid[12][4].walkable = false;
+    grid[12][5].walkable = false;
+    grid[12][6].walkable = false;
+    grid[12][7].walkable = false;
+    grid[12][8].walkable = false;
+    grid[12][9].walkable = false;
+    grid[12][10].walkable = false;
+    grid[12][11].walkable = false;
+    grid[12][12].walkable = false;
+
+    // Fifth Blockade
+    grid[1][11].walkable = false;
+    grid[1][12].walkable = false;
+    grid[1][13].walkable = false;
+    grid[2][11].walkable = false;
+    grid[2][12].walkable = false;
+    grid[2][13].walkable = false;
+    grid[3][11].walkable = false;
+    grid[3][12].walkable = false;
+    grid[3][13].walkable = false;
+
+    // Define start and goal nodes
+    Node* start = &grid[0][0];
+    Node* goal = &grid[14][14];
+    Node* enemy1 = &grid[5][2];
+    Node* enemy2 = &grid[6][12];
+    grid[enemy1->x][enemy1->y].walkable = false;
+    grid[enemy2->x][enemy2->y].walkable = false;
+
+
+    cout << "Grid Representation:" << endl;
+    createAndDisplayGrid(grid, *start, *goal, *enemy1, *enemy2);
+
+    vector<Node> path = aStarAlgorithm(grid, *start, *goal);
+
+    // Display the path
+    if (!path.empty()) {
+        cout << "Path found!" << endl;
+        for (auto& node : path) {
+            cout << "(" << node.x << ", " << node.y << ") ";
+        }
+        cout << endl;
+    }
+    else {
+        cout << "No path found." << endl;
+    }
+
+    return 0;
+}
