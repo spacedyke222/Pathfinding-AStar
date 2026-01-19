@@ -1,4 +1,4 @@
-# 2270-Term-Project
+# Pathfinding-A*
 
 
 Enemy Pathfinding Using A* Algorithm in Video Games
